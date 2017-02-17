@@ -27,7 +27,7 @@ public class CoordinateTransformer {
     }
 
 
-    public void cartesianToCorner(int width, int height, CartesianCoordinate cartesianCoordinate) {
+    public static void cartesianToCorner(int width, int height, CartesianCoordinate cartesianCoordinate) {
         cartesianCoordinate.setX(cartesianCoordinate.getX() + (width / 2));
         cartesianCoordinate.setY(cartesianCoordinate.getY() + (height / 2));
     }

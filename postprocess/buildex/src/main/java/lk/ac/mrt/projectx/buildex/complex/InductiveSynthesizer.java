@@ -2,6 +2,7 @@ package lk.ac.mrt.projectx.buildex.complex;
 
 import lk.ac.mrt.projectx.buildex.complex.cordinates.CartesianCoordinate;
 import lk.ac.mrt.projectx.buildex.complex.cordinates.PolarCoordinate;
+import lk.ac.mrt.projectx.buildex.complex.operations.Operation;
 import lk.ac.mrt.projectx.buildex.models.Pair;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.util.FastMath;
@@ -48,6 +49,20 @@ public class InductiveSynthesizer {
                 goodExamples.add(e);
             }
         }
+
+        Operation rOnly = new Operation("R") {
+            @Override
+            public double operate(double r, double theta) {
+                return r;
+            }
+        };
+
+        Operation tOnly = new Operation("T") {
+            @Override
+            public double operate(double r, double theta) {
+                return theta;
+            }
+        };
 
         /*Iterator<Double> thetaExamplesIterator = thetaExamples.keySet().iterator();
         int s = 0;
@@ -103,7 +118,7 @@ public class InductiveSynthesizer {
         DescriptiveStatistics tComponentRTCoefficient = new DescriptiveStatistics();
         DescriptiveStatistics tComponentConstCoefficient = new DescriptiveStatistics();
 
-        int window = widthIn*widthOut/5;//(int) Math.sqrt(width * height);
+        int window = widthIn * widthOut / 5;//(int) Math.sqrt(width * height);
         for (int i = 0; i < examples.size() - window; i += window) {
             int size = window;
             double xR[][] = new double[size][variablesCountR];
@@ -154,7 +169,7 @@ public class InductiveSynthesizer {
                 ComplexSynthesizer complexSynthesizer = new ComplexSynthesizer();
                 boolean noRIntercept = !constantR;
 
-                double[] synthesizeR = complexSynthesizer.synthesize(yR, xR, noRIntercept);
+                double[] synthesizeR = complexSynthesizer.synthesize(yR, xR, noRIntercept, true);
                 double rVarCoefs[] = new double[variableCombinationR.length + 1];//+1 for constant
                 int pivot = 0;
                 for (int l = 0; l < variableCombinationR.length; l++) {
@@ -178,7 +193,7 @@ public class InductiveSynthesizer {
 
 
                 //assuming T has no coefficient term. Might have to change in future
-                double[] synthesizeT = complexSynthesizer.synthesize(yT, xT, true);
+                double[] synthesizeT = complexSynthesizer.synthesize(yT, xT, true, false);
                 //System.out.println(synthesizeT[2]);
                 double normalizedValue = synthesizeT[synthesizeT.length - 1];
                 for (int k = 0; k < yT.length; k++) {
@@ -190,7 +205,7 @@ public class InductiveSynthesizer {
                         xTnew[k][l] = xT[k][l];
                     }
                 }
-                synthesizeT = complexSynthesizer.synthesize(yT, xTnew, true);
+                synthesizeT = complexSynthesizer.synthesize(yT, xTnew, true, false);
 
                 double tVarCoefs[] = new double[variableCombinationR.length + 1];//+1 for constant
 

@@ -15,7 +15,7 @@ public class ComplexSynthesizerTest {
         ComplexSynthesizer complexSynthesizer = new ComplexSynthesizer();
         double y[] = {7, 6, 5, 16};
         double x[][] = {{1, 3}, {2, 2}, {3, 1}, {4, 6}};
-        double[] synthesize = complexSynthesizer.synthesize(y, x,true);
+        double[] synthesize = complexSynthesizer.synthesize(y, x,true,true);
         for (double d : synthesize) {
             System.out.print(d + ",");
         }

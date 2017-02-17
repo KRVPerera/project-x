@@ -22,7 +22,7 @@ public class CylinderGenerator extends Generator {
                 double dy = y - centerY;
 
                 double distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-                double xout = Math.atan2(dx, dy) * centerX / Math.PI;
+                double xout = Math.atan2(dy, dx) * centerX / Math.PI;
                 double yout = distance * height / R;
 
                 int tx = (int) (xout + centerX);
@@ -31,7 +31,7 @@ public class CylinderGenerator extends Generator {
                 if (tx >= 0 && tx < width && ty >= 0 && ty < height) {
                     CartesianCoordinate cIn = new CartesianCoordinate(tx, ty);
                     CartesianCoordinate cOut = new CartesianCoordinate(x, y);
-                    examples.add(new Pair<>(cOut, cIn));
+                    examples.add(new Pair<>(cIn, cOut));
                 }
             }
         }

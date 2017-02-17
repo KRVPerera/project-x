@@ -1,6 +1,9 @@
 package lk.ac.mrt.projectx.buildex.complex;
 
 import lk.ac.mrt.projectx.buildex.complex.cordinates.CartesianCoordinate;
+import lk.ac.mrt.projectx.buildex.complex.generators.CylinderGenerator;
+import lk.ac.mrt.projectx.buildex.complex.generators.FishEyeGenerator;
+import lk.ac.mrt.projectx.buildex.complex.generators.PolarGenerator;
 import lk.ac.mrt.projectx.buildex.complex.generators.TwirlGenerator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,13 +20,14 @@ public class TestSolver {
     private final static Logger logger = LogManager.getLogger(TestSolver.class);
 
     public static void main(String[] args) {
-        int x=640;
-        BufferedImage inImg = new BufferedImage(x, x, BufferedImage.TYPE_3BYTE_BGR);
-        BufferedImage outImg = new BufferedImage(x, x, BufferedImage.TYPE_3BYTE_BGR);
-        InductiveSynthesizer inductiveSynthesizer = new InductiveSynthesizer();
+        int x=800;
+        int y=600;
+        BufferedImage inImg = new BufferedImage(x, y, BufferedImage.TYPE_3BYTE_BGR);
+        BufferedImage outImg = new BufferedImage(x, y, BufferedImage.TYPE_3BYTE_BGR);
+        InductiveSynthesizerNew inductiveSynthesizer = new InductiveSynthesizerNew();
 //        inductiveSynthesizer.solve(new TwirlGenerator().generate(x, x), inImg, outImg);
         long startT = System.currentTimeMillis()/(1000*60);
-        inductiveSynthesizer.solve(new TwirlGenerator().generate(x, x), inImg, outImg);
+        inductiveSynthesizer.solve(new PolarGenerator().generate(x, y), inImg, outImg);
         logger.debug("Synthesized in {}ms", System.currentTimeMillis()/(1000*60) - startT);
     }
 
