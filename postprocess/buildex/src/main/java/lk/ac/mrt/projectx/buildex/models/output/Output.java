@@ -136,4 +136,38 @@ public class Output {
             }
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(opcode);
+        stringBuilder.append(",");
+        stringBuilder.append(dsts.size());
+        stringBuilder.append(",");
+        for (Operand dst : dsts) {
+            stringBuilder.append(dst.getType());
+            stringBuilder.append(",");
+            stringBuilder.append(dst.getWidth());
+            stringBuilder.append(",");
+            stringBuilder.append(dst.getValue().longValue());
+            stringBuilder.append(",");
+        }
+        stringBuilder.append(srcs.size());
+        stringBuilder.append(",");
+        for (Operand src : srcs) {
+            stringBuilder.append(src.getType());
+            stringBuilder.append(",");
+            stringBuilder.append(src.getWidth());
+            stringBuilder.append(",");
+            stringBuilder.append(src.getValue().longValue());
+            stringBuilder.append(",");
+        }
+
+        stringBuilder.append(eflags);
+        stringBuilder.append(",");
+        stringBuilder.append(pc);
+        stringBuilder.append("\n");
+        stringBuilder.append(opcode);
+        return stringBuilder.toString();
+    }
 }

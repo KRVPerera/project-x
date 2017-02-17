@@ -1,8 +1,12 @@
 package lk.ac.mrt.projectx.buildex;
 
 import lk.ac.mrt.projectx.buildex.files.MemoryDumpFile;
+import lk.ac.mrt.projectx.buildex.models.Pair;
+import lk.ac.mrt.projectx.buildex.models.common.StaticInfo;
 import lk.ac.mrt.projectx.buildex.models.memoryinfo.MemoryDumpType;
 import lk.ac.mrt.projectx.buildex.models.memoryinfo.MemoryRegion;
+import lk.ac.mrt.projectx.buildex.models.memoryinfo.PCMemoryRegion;
+import lk.ac.mrt.projectx.buildex.models.output.Output;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,14 +25,46 @@ public class MemoryAnalyser {
 
     private static MemoryAnalyser memoryAnalyser = new MemoryAnalyser();
 
-    public static MemoryAnalyser getInstance() {
-        return memoryAnalyser;
-    }
-
     private MemoryAnalyser() {
 
     }
 
+    public static MemoryAnalyser getInstance() {
+        return memoryAnalyser;
+    }
+
+    public static List<MemoryRegion> getInputOutputRegions(List<MemoryRegion> imageRegions, List<MemoryRegion> totalMemRegions, List<PCMemoryRegion> pcMems, List<Long> appPc, List<Pair<Output, StaticInfo>> instrs, List<Long> startPoints) {
+        logger.debug("Getting input output region for further analysis");
+        List<MemoryRegion> ret = new ArrayList<>();
+        MemoryRegion inputMemRegion = null;
+        MemoryRegion outputMemRegion = null;
+        for (MemoryRegion imageRegion : imageRegions) {
+            if ((imageRegion.getMemoryDumpType() == MemoryDumpType.INPUT_BUFFER) && (inputMemRegion == null)) {
+                inputMemRegion = imageRegion;
+                if (outputMemRegion != null) {
+                    break;
+                }
+            } else if ((imageRegion.getMemoryDumpType() == MemoryDumpType.OUTPUT_BUFFER) && (outputMemRegion == null)) {
+                outputMemRegion = imageRegion;
+                if (inputMemRegion != null) {
+                    break;
+                }
+            }
+        }
+
+        if ((inputMemRegion != null) && (outputMemRegion != null)) {
+            logger.debug("Both input and output regions are found from dump");
+            ret.add(inputMemRegion);
+            ret.add(outputMemRegion);
+        } else {
+
+            if (inputMemRegion == null) {
+
+            }
+
+        }
+        return ret;
+    }
 
     public List<MemoryRegion> getImageRegions(List<MemoryDumpFile> memoryDumpFiles, ProjectXImage inputImage, ProjectXImage outputImage) throws IOException {
         /*if (this.isEqualImages(inputImage, outputImage)) {
@@ -54,7 +90,7 @@ public class MemoryAnalyser {
                 memoryRegions.addAll(startPoints);
             }
         }
-        logger.debug("Found total of {} memory regions {}", memoryRegions.size(),memoryRegions.toString());
+        logger.debug("Found total of {} memory regions {}", memoryRegions.size(), memoryRegions.toString());
         return memoryRegions;
     }
 

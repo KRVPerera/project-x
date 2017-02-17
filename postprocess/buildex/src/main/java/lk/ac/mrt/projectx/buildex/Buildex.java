@@ -127,11 +127,20 @@ public class Buildex {
         MemoryRegionUtils.removePossibleStackFrames( memoryLayoutPCMemoryRegion, memoryLayoutMemoryInfo, staticInfos,
                 instrsForward );
 
-        /* merge thse two information - instrace mem info + mem dump info */
+        /* merge these two information - instrace mem info + mem dump info */
         List<MemoryRegion> totalMemRegions = new ArrayList<>();
         List<MemoryRegion> imageRegions = MemoryRegionUtils.mergeInstraceAndDumpRegions( totalMemRegions,
                 memoryLayoutMemoryInfo, dumpRegions );
 
+        /* get possible buffers - should be able to merge these analysis */
+        MemoryRegionUtils.markPossibleBuffers(memoryLayoutPCMemoryRegion, totalMemRegions, staticInfos, instrsForward);
+        List<MemoryRegion> regions = MemoryAnalyser.getInstance().getInputOutputRegions(imageRegions, totalMemRegions, memoryLayoutPCMemoryRegion,
+                candidateIns, instrsForward, startPointMem);
+
+        MemoryRegion inputMemoryRegion = regions.get(0);
+        MemoryRegion outputMemoryRegion = regions.get(1);
+
+        List<MemoryRegion> inputRegions = new ArrayList<>();
 
         /* ---------------------------- forward analysis -------------------------------*/
 
@@ -185,4 +194,6 @@ public class Buildex {
         /*HalideProgram halideProgram=new HalideProgram();
         halideProgram.generateHalide();*/
     }
+
+
 }
