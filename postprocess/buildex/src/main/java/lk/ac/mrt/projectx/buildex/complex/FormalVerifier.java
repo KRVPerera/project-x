@@ -2,7 +2,12 @@ package lk.ac.mrt.projectx.buildex.complex;
 
 import lk.ac.mrt.projectx.buildex.complex.cordinates.CartesianCoordinate;
 import lk.ac.mrt.projectx.buildex.complex.cordinates.PolarCoordinate;
+import lk.ac.mrt.projectx.buildex.complex.generators.Generator;
+import lk.ac.mrt.projectx.buildex.complex.generators.PolarGenerator;
+import lk.ac.mrt.projectx.buildex.complex.generators.TwirlGenerator;
+import lk.ac.mrt.projectx.buildex.models.Pair;
 import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.FastScatterPlot;
@@ -10,7 +15,9 @@ import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by krv on 2/19/17.
@@ -63,14 +70,14 @@ public class FormalVerifier extends ApplicationFrame {
     /**
      * A constant for the number of items in the sample dataset.
      */
-    private static final int width = 100;
-    private static final int height = 100;
+    private static final int width = 500;
+    private static final int height = 500;
     private static final int COUNT = width * height;
 
     /**
      * The data.
      */
-    private float[][] data = new float[ 2 ][ COUNT ];
+    private float[][] data = new float[2][COUNT];
 
     /**
      * Creates a new fast scatter plot demo.
@@ -79,32 +86,33 @@ public class FormalVerifier extends ApplicationFrame {
      */
     public FormalVerifier(final String title, final String lblx, final String lbly) throws IOException {
 
-        super( title );
+        super(title);
         populateData();
-        final NumberAxis domainAxis = new NumberAxis( lblx );
-        domainAxis.setAutoRangeIncludesZero( false );
-        final NumberAxis rangeAxis = new NumberAxis( lbly );
-        rangeAxis.setAutoRangeIncludesZero( false );
-        final FastScatterPlot plot = new FastScatterPlot( this.data, domainAxis, rangeAxis );
-        final JFreeChart chart = new JFreeChart( title, plot );
+        final NumberAxis domainAxis = new NumberAxis(lblx);
+        domainAxis.setAutoRangeIncludesZero(false);
+        final NumberAxis rangeAxis = new NumberAxis(lbly);
+        rangeAxis.setAutoRangeIncludesZero(false);
+        final FastScatterPlot plot = new FastScatterPlot(this.data, domainAxis, rangeAxis);
+        final JFreeChart chart = new JFreeChart(title, plot);
 //        chart.setLegend(null);
 
         // force aliasing of the rendered content..
         chart.getRenderingHints().put
-                ( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+                (RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        final ChartPanel panel = new ChartPanel( chart, true );
-        panel.setPreferredSize( new java.awt.Dimension( 500, 270 ) );
+        final ChartPanel panel = new ChartPanel(chart, true);
+        panel.setPreferredSize(new java.awt.Dimension(800, 600));
         //      panel.setHorizontalZoom(true);
         //    panel.setVerticalZoom(true);
-        panel.setMinimumDrawHeight( 10 );
-        panel.setMaximumDrawHeight( 2000 );
-        panel.setMinimumDrawWidth( 20 );
-        panel.setMaximumDrawWidth( 2000 );
+        panel.setMinimumDrawHeight(10);
+        panel.setMaximumDrawHeight(3000);
+        panel.setMinimumDrawWidth(20);
+        panel.setMaximumDrawWidth(3000);
 
-        setContentPane( panel );
+        setContentPane(panel);
         //TODO : Print
-        //ChartUtilities.saveChartAsJPEG( new File("/home/krv/Projects/FYP/graphs/FishEye.jpg"),chart,800,600 );
+
+        //ChartUtilities.saveChartAsJPEG( new File("F:\\FYP2\\FinalP\\graphs\\FishEye"+System.currentTimeMillis()+".jpg"),chart,800,600 );
 
     }
 
@@ -120,43 +128,6 @@ public class FormalVerifier extends ApplicationFrame {
     // ****************************************************************************
 
     /**
-     * Populates the data array with random values.
-     */
-    private void populateData() {
-        double maxR = Math.hypot( width / 2, height / 2 );
-
-        for (int i = 0 ; i < width ; i++) {
-            for (int j = 0 ; j < height ; j++) {
-                CartesianCoordinate cartesianCoordinate = new CartesianCoordinate( i, j );
-                PolarCoordinate polarCoordinate = CoordinateTransformer.cartesian2Polar( width, height, cartesianCoordinate );
-
-                double thetaNew = 1.0 * polarCoordinate.getTheta() + 0.0 * (polarCoordinate.getR() / polarCoordinate.getTheta()) + -0.027 * (polarCoordinate.getTheta() / polarCoordinate.getTheta());
-
-                double rNew = 0.472 * polarCoordinate.getR() + 0.001 * Math.pow( polarCoordinate.getR(), 2 ) + 0.002 * (polarCoordinate.getR() * polarCoordinate.getTheta());
-                //thetaNew= MathUtils.normalizeAngle(thetaNew, FastMath.PI);
-                PolarCoordinate newPola = new PolarCoordinate( thetaNew, rNew );
-
-                CartesianCoordinate newCartCord = CoordinateTransformer.polar2Cartesian( width, height, newPola );
-                if (clampPass( width, height, newCartCord )) {
-                    //  out.setRGB(i, j, in.getRGB((int) newCartCord.getX(), (int) newCartCord.getY()));
-                    //TODO : Add data 0 - X axis , 1 - Y Axis
-                    this.data[ 0 ][ i + j * width ] = (float) polarCoordinate.getTheta();
-                    this.data[ 1 ][ i + j * width ] = (float) newPola.getTheta();
-                }
-            }
-        }
-
-    }
-
-    private boolean clampPass(int width, int height, CartesianCoordinate cartesianCoordinate) {
-        int x = (int) Math.round( cartesianCoordinate.getX() );
-
-        int y = (int) Math.round( cartesianCoordinate.getY() );
-
-        return x >= 0 && x <= width - 1 && y >= 0 && y <= height - 1;
-    }
-
-    /**
      * Starting point for the demonstration application.
      *
      * @param args ignored.
@@ -164,11 +135,48 @@ public class FormalVerifier extends ApplicationFrame {
     public static void main(final String[] args) throws IOException {
 
         //TODO : Add labels
-        final FormalVerifier demo = new FormalVerifier( "Fish Eye Filter", "Old Theta", "New Theta" );
+        final FormalVerifier demo = new FormalVerifier("Polar Generator", "Old X", "New X");
         demo.pack();
-        RefineryUtilities.centerFrameOnScreen( demo );
-        demo.setVisible( true );
+        RefineryUtilities.centerFrameOnScreen(demo);
+        demo.setVisible(true);
 
+    }
+
+
+    /**
+     * Populates the data array with random values.
+     */
+    private void populateData() {
+        double maxR = Math.hypot(width / 2, height / 2);
+
+//        Generator generator = new PolarGenerator();
+        Generator generator = new TwirlGenerator();
+        List<Pair<CartesianCoordinate, CartesianCoordinate>> list = generator.generate(width, height);
+        int i = 0;
+        for (Pair<CartesianCoordinate, CartesianCoordinate> cartesianCoordinateCartesianCoordinatePair : list) {
+            CartesianCoordinate oldCoord = cartesianCoordinateCartesianCoordinatePair.first;
+            CartesianCoordinate outputCoord = cartesianCoordinateCartesianCoordinatePair.second;
+            PolarCoordinate polarOldCoord = CoordinateTransformer.cartesian2Polar(width, height, oldCoord);
+            PolarCoordinate polaroOutputCoord = CoordinateTransformer.cartesian2Polar(width, height, outputCoord);
+
+            if (clampPass(width, height, outputCoord)) {
+                //  out.setRGB(i, j, in.getRGB((int) newCartCord.getX(), (int) newCartCord.getY()));
+                //TODO : Add data 0 - X axis , 1 - Y Axis
+                this.data[0][i] = (float) polarOldCoord.getR();
+                this.data[1][i] = (float) polaroOutputCoord.getR();
+            }
+            i++;
+        }
+
+
+    }
+
+    private boolean clampPass(int width, int height, CartesianCoordinate cartesianCoordinate) {
+        int x = (int) Math.round(cartesianCoordinate.getX());
+
+        int y = (int) Math.round(cartesianCoordinate.getY());
+
+        return x >= 0 && x <= width - 1 && y >= 0 && y <= height - 1;
     }
 
 }
