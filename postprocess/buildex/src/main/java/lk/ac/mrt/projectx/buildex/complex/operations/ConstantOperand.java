@@ -3,9 +3,9 @@ package lk.ac.mrt.projectx.buildex.complex.operations;
 /**
  * @author Chathura Widanage
  */
-public class ConstantOperation extends Operation {
+public class ConstantOperand extends Operand {
 
-    public ConstantOperation(String name) {
+    public ConstantOperand(String name) {
         super(name);
     }
 

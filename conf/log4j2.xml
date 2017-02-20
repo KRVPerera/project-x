@@ -20,7 +20,7 @@
         </Async>
     </Appenders>
     <Loggers>
-        <AsyncRoot level="debug">
+        <AsyncRoot level="info">
             <AppenderRef ref="AsyncConsole"/>
             <AppenderRef ref="AsyncRollingFile"/>
         </AsyncRoot>

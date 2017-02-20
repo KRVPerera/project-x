@@ -2,13 +2,14 @@ package lk.ac.mrt.projectx.buildex.complex;
 
 import lk.ac.mrt.projectx.buildex.complex.cordinates.CartesianCoordinate;
 import lk.ac.mrt.projectx.buildex.complex.cordinates.PolarCoordinate;
+import lk.ac.mrt.projectx.buildex.complex.langs.HalideGenerator;
 import lk.ac.mrt.projectx.buildex.complex.operations.*;
 import lk.ac.mrt.projectx.buildex.models.Pair;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.awt.image.BufferedImage;
+import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -26,93 +27,94 @@ public class InductiveSynthesizerNew {
 
         CoordinateTransformer.cartesianToCenter(widthIn, heightIn, examples);//making all points center originated
 
-        /*Filtering good pairs*/
-       /* List<Pair<CartesianCoordinate, CartesianCoordinate>> goodExamples = new ArrayList<>();
-        Map<Double, List<Pair<CartesianCoordinate, CartesianCoordinate>>> thetaExamples = new HashMap<>();
-        Map<Double, List<Pair<CartesianCoordinate, CartesianCoordinate>>> rExamples = new HashMap<>();
-        for (Pair<CartesianCoordinate, CartesianCoordinate> e : examples) {
-
-            PolarCoordinate polarCoordinate = CoordinateTransformer.cartesian2Polar(e.first);
-            double theta = round(polarCoordinate.getTheta(), 1);
-            double r = Math.round(polarCoordinate.getR());
-            List<Pair<CartesianCoordinate, CartesianCoordinate>> pairsTheta = thetaExamples.get(theta);
-            List<Pair<CartesianCoordinate, CartesianCoordinate>> pairsR = rExamples.get(r);
-
-            if (pairsTheta == null) {
-                pairsTheta = new ArrayList<>();
-                thetaExamples.put(theta, pairsTheta);
-            }
-            pairsTheta.add(e);
-
-            if (pairsR == null) {
-                pairsR = new ArrayList<>();
-                rExamples.put(r, pairsR);
-            }
-            pairsR.add(e);
-        }*/
-
-        Operation r = new Operation("R", "polarCoordinate.getR()") {
+        Operand r = new Operand("R", "r_in") {
             @Override
             public double operate(double r, double theta) {
                 return r;
             }
         };
-        Operation r2 = new Operation("R2", "Math.pow(polarCoordinate.getR(),2)") {
+        Operand r2 = new Operand("R2", "pow(r_in,2)") {
             @Override
             public double operate(double r, double theta) {
                 return r * r;
             }
         };
 
-        Operation r2sqrt = new Operation("r2sqrt", "(polarCoordinate.getR()+(1-Math.sqrt(1-(Math.pow(polarCoordinate.getR(),2)))))") {
+        Operand r2sqrt = new Operand("r2sqrt", "(r_in+(1-sqrt(1-(pow(r_in,2)))))") {
             @Override
             public double operate(double r, double theta) {
                 return (r + (1 - (Math.sqrt(1 - r * r))));
             }
         };
 
-        Operation rt = new Operation("RT", "(polarCoordinate.getR()*polarCoordinate.getTheta())") {
+        Operand rt = new Operand("RT", "(r_in*theta_in)") {
             @Override
             public double operate(double r, double theta) {
                 return theta * r;
             }
         };
 
-        Operation t = new Operation("T", "polarCoordinate.getTheta()") {
+        final Operand t = new Operand("T", "theta_in") {
             @Override
             public double operate(double r, double theta) {
                 return theta;
             }
         };
 
-        Operation t2 = new Operation("T2", "Math.pow(polarCoordinate.getTheta(),2)") {
+        Operand t2 = new Operand("T2", "pow(theta_in,2)") {
             @Override
             public double operate(double r, double theta) {
                 return theta * theta;
             }
         };
 
-        final double h = imageIn.getHeight();
-        final double R = Math.hypot(imageIn.getWidth() / 2, imageIn.getHeight() / 2);
-
-        Operation r2T2Sqrt = new Operation("R2T2Sqrt", "Math.hypot(polarCoordinate.getR(),polarCoordinate.getTheta())") {
+        Operand r2T2Sqrt = new Operand("R2T2Sqrt", "hypot(r_in,theta_in)") {
             @Override
             public double operate(double r, double theta) {
                 return Math.hypot(r, theta);
             }
         };
 
-        Operation rOverTheta = new Operation("R/T", "(polarCoordinate.getR()/polarCoordinate.getTheta())") {
+        Operand rOverTheta = new Operand("R/T", "(r_in/theta_in)") {
             @Override
             public double operate(double r, double theta) {
                 return r / theta;
             }
         };
 
-        Operation tOverR = new Operation("T/R", "(polarCoordinate.getTheta()/polarCoordinate.getR())") {
+        Operand tOverR = new Operand("T/R", "(theta_in/r_in)") {
             @Override
             public double operate(double r, double theta) {
                 return theta / r;
+            }
+        };
+
+        Operand widthOp = new Operand("width", "(width/2)") {
+            @Override
+            public double operate(double r, double theta) {
+                return widthIn / 2;
+            }
+        };
+
+
+        Operand widthOpSqr = new Operand("width", "(pow(width/2),2)") {
+            @Override
+            public double operate(double r, double theta) {
+                return Math.pow(widthIn / 2, 2);
+            }
+        };
+
+        Operand widthTheta = new Operand("widthTheta", "(width*theta_in/2)") {
+            @Override
+            public double operate(double r, double theta) {
+                return theta * (widthIn / 2);
+            }
+        };
+
+        Operand widthThetaSqr = new Operand("widthTheta", "(pow(width*theta_in/2,2))") {
+            @Override
+            public double operate(double r, double theta) {
+                return Math.pow(theta * (widthIn / 2), 2);
             }
         };
 
@@ -120,59 +122,172 @@ public class InductiveSynthesizerNew {
         //System.exit(0);
 
 
-        List<Operation> operations = new ArrayList<>();
-        operations.add(r);
-        operations.add(r2);
-        operations.add(t2);
-        operations.add(t);
-        operations.add(rt);
-
-        /*Guess guess2 = guessR(examples, operations, widthIn, heightIn, false, Guess.GuessOperator.SQUARE);
-        System.out.println(guess2);
-        System.exit(0);
-*/
-        operations.add(rOverTheta);
+        List<Operand> operands = new ArrayList<>();
+        //operands.add(r);
+        operands.add(r2);
+        operands.add(t2);
+        //operands.add(t);
+        //operands.add(rt);
+        operands.add(rOverTheta);
         //operations.add(tOverR);
         //operations.add(r2sqrt);
         //operations.add(r2T2Sqrt);
+        //operands.add(widthOp);
+        //operands.add(widthOpSqr);
+        //operands.add(widthTheta);
+        //operands.add(widthThetaSqr);
+
+        Attribute one = new Attribute("one", "1f", 1);
+        Attribute negOne = new Attribute("negative_one", "(-1f)", -1);
+        Attribute width = new Attribute("width", "width", widthIn);
+        Attribute height = new Attribute("height", "height", heightIn);
+        Attribute maxR = new Attribute("maxR", "(hypot(width/2,height/2))", Math.hypot(widthIn / 2, heightIn / 2));
+        Attribute pi = new Attribute("maxR", "(M_PI)", Math.PI);
+        Attribute userAttr = new Attribute("attribute1", "(4)", 4);
+
+
+        List<Attribute> attributes = new ArrayList<>();
+        attributes.add(one);
+        attributes.add(negOne);
+        attributes.add(width);
+        attributes.add(height);
+        attributes.add(maxR);
+        attributes.add(pi);
+        attributes.add(userAttr);
+
+        List<OperandDecorator> operandDecorators = new ArrayList<>();
+
+        OperandDecorator none = new OperandDecorator("%s") {
+            @Override
+            public double operate(double val) {
+                return val;
+            }
+
+            @Override
+            public double operateInv(double val) {
+                return val;
+            }
+        };
+
+        OperandDecorator sqr = new OperandDecorator("sqrt(%s)") {
+            @Override
+            public double operate(double val) {
+                return Math.pow(val, 2);
+            }
+
+            @Override
+            public double operateInv(double val) {
+                return Math.sqrt(val);
+            }
+        };
+
+        OperandDecorator sqrt = new OperandDecorator("pow(%s,2)") {
+            @Override
+            public double operate(double val) {
+                return Math.sqrt(val);
+            }
+
+            @Override
+            public double operateInv(double val) {
+                return Math.pow(val, 2);
+            }
+        };
+
+        OperandDecorator tan = new OperandDecorator("atan(%s)") {
+            @Override
+            public double operate(double val) {
+                return Math.tan(val);
+            }
+
+            @Override
+            public double operateInv(double val) {
+                return Math.atan(val);
+            }
+        };
+
+        operandDecorators.add(none);
+        operandDecorators.add(sqr);
+        operandDecorators.add(sqrt);
+        operandDecorators.add(tan);
+
+        Parameterization parameterization = new Parameterization(attributes, operandDecorators);
 
         Guess bestGuessR = null;
         Guess bestGuessT = null;
 
-        List<Guess.GuessOperator> guessOperators = Arrays.asList(Guess.GuessOperator.values());
+        GuessesValidationServiceNew gvs = new GuessesValidationServiceNew(
+                getTestCases(examples, null), widthIn, heightIn, true, null
+        );//now using same gvs for all guesses, reducing thread creations and making guesses stop if it goes below current best
 
-        long maxVotes = 0;
-        for (Guess.GuessOperator gops : guessOperators) {
-            logger.info("Trying Guess operator : {}", gops);
-            for (int i = 1; i <= operations.size(); i++) {
-                List<List<Operation>> combination = Combinations.combination(operations, i);
+        for (OperandDecorator operandDecorator : operandDecorators) {
+            logger.info("Trying Guess operator : {}", operandDecorator);
+            for (int i = 1; i <= operands.size(); i++) {
+                List<List<Operand>> combination = Combinations.combination(operands, i);
                 for (int j = 0; j < combination.size(); j++) {
-                    List<Operation> ops = combination.get(j);
-                    Guess guess = guessR(examples, ops, widthIn, heightIn, false, gops);
-                    if (guess.getVotes() > maxVotes) {
+                    List<Operand> ops = combination.get(j);
+                    guessR(examples, ops, false, operandDecorator, gvs);
+                    logger.info("Current max voters : {}", gvs.getMaxVoters());
+                    /*if (guess.getVotes() > maxVotes) {
                         bestGuessR = guess;
                         maxVotes = guess.getVotes();
-                    }
+                    }*/
                 }
             }
         }
-        logger.info("R BEST Guess : {}", bestGuessR);
-        logger.info("R code : {}", bestGuessR.getGeneratedCode());
+        try {
+            List<Guess> guesses = gvs.awaitTermination();
+            if (guesses.size() > 1) {
+                logger.info("Tie breaking {} guesses", guesses.size());
+                logger.info("Max voted guesses {}", guesses);
+                gvs = new GuessesValidationServiceNew(
+                        getTestCases(examples, examples.size() / 4), widthIn, heightIn, true, null
+                );
+                for (Guess guess : guesses) {
+                    gvs.submit(guess);
+                }
+                guesses = gvs.awaitTermination();
+                logger.info("{} guesses after tie breaking", guesses.size());
+            }
+            bestGuessR = guesses.get(0);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        maxVotes = 0;
-        for (Guess.GuessOperator gops : guessOperators) {
-            for (int i = 1; i < operations.size(); i++) {
-                List<List<Operation>> combination = Combinations.combination(operations, i);
+        logger.info("R BEST Guess : {}", bestGuessR);
+        parameterization.parameterize(bestGuessR);
+
+        logger.info("R code : {}", bestGuessR.getGeneratedCode());
+        //logger.info(Math.sqrt(examples.size()));
+        //System.exit(0);
+
+        gvs = new GuessesValidationServiceNew(
+                getTestCases(examples, null), widthIn, heightIn, false, bestGuessR
+        );
+
+        for (OperandDecorator operandDecorator : operandDecorators) {
+            for (int i = 1; i <= operands.size(); i++) {
+                List<List<Operand>> combination = Combinations.combination(operands, i);
                 for (int j = 0; j < combination.size(); j++) {
-                    List<Operation> ops = combination.get(j);
-                    Guess guess = guessTheta(examples, ops, widthIn, heightIn, bestGuessR, gops);
-                    if (guess.getVotes() > maxVotes) {
+                    List<Operand> ops = combination.get(j);
+                    guessTheta(examples, ops, false, operandDecorator, gvs);
+                    logger.info("Current max voters : {}", gvs.getMaxVoters());
+                   /* if (guess.getVotes() > maxVotes) {
                         bestGuessT = guess;
                         maxVotes = guess.getVotes();
-                    }
+                    }*/
                 }
             }
         }
+
+        try {
+            List<Guess> guesses = gvs.awaitTermination();
+            bestGuessT = guesses.get(0);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        parameterization.parameterize(bestGuessT);
+
         logger.info("T BEST Guess : {}", bestGuessT);
 
         System.out.println("#####\n");
@@ -180,220 +295,27 @@ public class InductiveSynthesizerNew {
         System.out.println(bestGuessT.getGeneratedCode());
         System.out.println("\n#####");
 
-        System.exit(0);
-
-
-        Operation variableCombinationR[] = {r2, r, t};//R,T,R2,T2,RT,C
-        boolean constantR = false;
-
-        Operation variableCombinationT[] = {t, r};//R,T,R2,T2,RT,C
-        boolean constantT = false;
-
-        List<Statistics> statisticsR = new ArrayList<>();
-        List<Statistics> statisticsT = new ArrayList<>();
-
-        for (Operation oR : variableCombinationR) {
-            statisticsR.add(new Statistics(oR));
+        try {
+            Thread.sleep(20000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-
-        for (Operation oT : variableCombinationT) {
-            statisticsT.add(new Statistics(oT));
-        }
-
-       /* Iterator<Double> thetaIterator = thetaExamples.keySet().iterator();
-        Iterator<Double> rIterator = rExamples.keySet().iterator();*/
-
-       /* while (thetaIterator.hasNext()) {
-            double t=thetaIterator.next();
-            List<Pair<CartesianCoordinate, CartesianCoordinate>> pairs = thetaExamples.get(t);
-            int size=pairs.size();
-            double xR[][] = new double[size][variableCombinationR.length];
-            double yR[] = new double[size];
-
-            for (int j = 0; j < pairs.size(); j++) {
-                Pair<CartesianCoordinate, CartesianCoordinate> p = examples.get(j);
-
-                PolarCoordinate polarCoordinateS = CoordinateTransformer.cartesian2Polar(p.first);
-                PolarCoordinate polarCoordinateD = CoordinateTransformer.cartesian2Polar(p.second);
-
-                *//*Operations to R*//*
-                for (int comb = 0; comb < variableCombinationR.length; comb++) {
-                    xR[j][comb] = variableCombinationR[comb].operate(polarCoordinateS.getR(), polarCoordinateS.getTheta());
-                }
-
-                yR[j] = polarCoordinateD.getR();
-
-
-            }
-            try {
-                ComplexSynthesizer complexSynthesizer = new ComplexSynthesizer();
-                boolean noRIntercept = !constantR;
-
-                double[] synthesizeR = complexSynthesizer.synthesize(yR, xR, noRIntercept);
-                if (synthesizeR != null) {
-                    assert synthesizeR.length == variableCombinationR.length;
-                    for (int l = 0; l < synthesizeR.length; l++) {
-                        statisticsR.get(l).addValue(synthesizeR[l]);
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error in regression process", e);//no need to print stack trace
-            }
-        }
-
-        //System.exit(0);
-
-        while (rIterator.hasNext()) {
-            double r=rIterator.next();
-            List<Pair<CartesianCoordinate, CartesianCoordinate>> pairs = rExamples.get(r);
-            int size=pairs.size();
-
-            if(size<=variableCombinationT.length+1){
-                continue;
-            }
-
-            double xT[][] = new double[size][variableCombinationT.length+0];//+1 for Math.PI*n constant normalization
-            double yT[] = new double[size];
-            for (int j = 0; j < pairs.size(); j++) {
-                Pair<CartesianCoordinate, CartesianCoordinate> p = examples.get(j);
-
-                PolarCoordinate polarCoordinateS = CoordinateTransformer.cartesian2Polar(p.first);
-                PolarCoordinate polarCoordinateD = CoordinateTransformer.cartesian2Polar(p.second);
-
-                *//*Operations to T*//*
-                for (int comb = 0; comb < variableCombinationT.length; comb++) {
-                    xT[j][comb] = variableCombinationT[comb].operate(polarCoordinateS.getR(), polarCoordinateS.getTheta());
-                }
-                //xT[j][variableCombinationT.length] = 2*Math.PI;//to avoid the error due to normalizing angle to 360deg
-                yT[j] = polarCoordinateD.getTheta();
-                //   System.out.println(polarCoordinateD.getTheta()+":"+(polarCoordinateS.getR()+polarCoordinateS.getTheta()));
-            }
-            try {
-                ComplexSynthesizer complexSynthesizer = new ComplexSynthesizer();
-                //assuming T has no coefficient term. Might have to change in future
-                double[] synthesizeT = complexSynthesizer.synthesize(yT, xT, true);
-                if (synthesizeT != null) {
-                    *//*double normalizedValue = synthesizeT[synthesizeT.length - 1]*Math.PI*2;//PI
-                    for (int k = 0; k < yT.length; k++) {
-                        yT[k] -= normalizedValue;
-                    }
-                    double xTnew[][] = new double[xT.length][xT[0].length - 1];
-                    for (int k = 0; k < xTnew.length; k++) {
-                        for (int l = 0; l < xT[0].length - 1; l++) {
-                            xTnew[k][l] = xT[k][l];
-                        }
-                    }
-                    synthesizeT = complexSynthesizer.synthesize(yT, xTnew, true);*//*
-                    if (synthesizeT != null) {
-                        for (int l = 0; l < synthesizeT.length; l++) {
-                            statisticsT.get(l).addValue(synthesizeT[l]);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error in regression process", e);//no need to print stack trace
-            }
-        }
-*/
-
-      /*  int window = 64;//(int) Math.sqrt(width * height);
-        for (int i = 0; i < examples.size() - window; i += window) {
-            int size = window;
-            double xR[][] = new double[size][variableCombinationR.length];
-            double yR[] = new double[size];
-
-            double xT[][] = new double[size][variableCombinationT.length + 1];//+1 for Math.PI*n constant normalization
-            double yT[] = new double[size];
-            for (int j = i; j < i + size; j++) {
-                Pair<CartesianCoordinate, CartesianCoordinate> p = examples.get(j);
-
-                PolarCoordinate polarCoordinateS = CoordinateTransformer.cartesian2Polar(p.first);
-                PolarCoordinate polarCoordinateD = CoordinateTransformer.cartesian2Polar(p.second);
-
-                *//*Operations to R*//*
-                for (int comb = 0; comb < variableCombinationR.length; comb++) {
-                    xR[j - i][comb] = variableCombinationR[comb].operate(polarCoordinateS.getR(), polarCoordinateS.getTheta());
-                }
-
-                yR[j - i] = polarCoordinateD.getR();
-
-                *//*Operations to T*//*
-                for (int comb = 0; comb < variableCombinationT.length; comb++) {
-                    xT[j - i][comb] = variableCombinationT[comb].operate(polarCoordinateS.getR(), polarCoordinateS.getTheta());
-                }
-                xT[j - i][variableCombinationT.length] = Math.PI;//to avoid the error due to normalizing angle to 360deg
-                yT[j - i] = polarCoordinateD.getTheta();
-                //   System.out.println(polarCoordinateD.getTheta()+":"+(polarCoordinateS.getR()+polarCoordinateS.getTheta()));
-            }
-            try {
-                ComplexSynthesizer complexSynthesizer = new ComplexSynthesizer();
-                boolean noRIntercept = !constantR;
-
-                double[] synthesizeR = complexSynthesizer.synthesize(yR, xR, noRIntercept, true);
-                if (synthesizeR != null) {
-                    assert synthesizeR.length == variableCombinationR.length;
-                    for (int l = 0; l < synthesizeR.length; l++) {
-                        statisticsR.get(l).addValue(synthesizeR[l]);
-                    }
-                }
-
-                //assuming T has no coefficient term. Might have to change in future
-                double[] synthesizeT = complexSynthesizer.synthesize(yT, xT, true, false);
-                if (synthesizeT != null) {
-                    double normalizedValue = synthesizeT[synthesizeT.length - 1] * Math.PI;//PI
-                    for (int k = 0; k < yT.length; k++) {
-                        yT[k] -= normalizedValue;
-                    }
-                    double xTnew[][] = new double[xT.length][xT[0].length - 1];
-                    for (int k = 0; k < xTnew.length; k++) {
-                        for (int l = 0; l < xT[0].length - 1; l++) {
-                            xTnew[k][l] = xT[k][l];
-                        }
-                    }
-                    synthesizeT = complexSynthesizer.synthesize(yT, xTnew, true, false);
-                    if (synthesizeT != null) {
-                        for (int l = 0; l < synthesizeT.length; l++) {
-                            statisticsT.get(l).addValue(synthesizeT[l]);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error in regression process", e);//no need to print stack trace
-            }
-        }
-
-        *//*Approximating R coefficients*//*
-        for (Statistics sR : statisticsR) {
-            logger.debug(sR.toString());
-        }
-
-        GuessesGenerator guessesGeneratorR = new GuessesGenerator(statisticsR);
-        logger.debug("Total iterations : {}", guessesGeneratorR.getTotalIterations());
-
-        Guess approximateR = ApproximatorNew.approximate(guessesGeneratorR, examples, true, null, widthIn, heightIn);
-        logger.debug("R : {}", approximateR);
-        System.out.println("\n" + approximateR.getGeneratedCode());
-
-        *//*Approximating T coefficients*//*
-        for (Statistics sT : statisticsT) {
-            logger.debug(sT.toString());
-        }
-        GuessesGenerator guessesGeneratorT = new GuessesGenerator(statisticsT);
-        logger.debug("Total iterations : {}", guessesGeneratorT.getTotalIterations());
-        Guess approximateT = ApproximatorNew.approximate(guessesGeneratorT, examples, false, approximateR, widthIn, heightIn);
-        logger.debug("T : {}", approximateT);
-        System.out.println("\n" + approximateT.getGeneratedCode());*/
-
-
+        HalideGenerator halideGenerator = new HalideGenerator(bestGuessR, bestGuessT);
+        halideGenerator.generate();
     }
 
-    private Guess guessR(List<Pair<CartesianCoordinate, CartesianCoordinate>> examples, List<Operation> variableCombinationR, int widthIn, int heightIn, boolean constantR, Guess.GuessOperator guessOperator) {
+    /**
+     * Returns the current best guess
+     */
+    private void guessR(List<Pair<CartesianCoordinate, CartesianCoordinate>> examples,
+                        List<Operand> variableCombinationR, boolean constant,
+                        OperandDecorator guessOperator, GuessesValidationServiceNew gvs) {
         List<Statistics> statisticsR = new ArrayList<>();
-        for (Operation oR : variableCombinationR) {
+        for (Operand oR : variableCombinationR) {
             statisticsR.add(new Statistics(oR));
         }
-        if (constantR) {//todo move this to upper part
-            statisticsR.add(new Statistics(new ConstantOperation("constant")));
+        if (constant) {//todo move this to upper part
+            statisticsR.add(0, new Statistics(new ConstantOperand("constant")));
         }
         int window = 64;//(int) Math.sqrt(width * height);
         for (int i = 0; i < examples.size() - window; i += window) {
@@ -419,7 +341,7 @@ public class InductiveSynthesizerNew {
             }
             try {
                 ComplexSynthesizer complexSynthesizer = new ComplexSynthesizer();
-                boolean noRIntercept = !constantR;
+                boolean noRIntercept = !constant;
 
                 double[] synthesizeR = complexSynthesizer.synthesize(yR, xR, noRIntercept, true);
                 //System.out.println(synthesizeR[0]);
@@ -435,27 +357,34 @@ public class InductiveSynthesizerNew {
         }
 
         /*Approximating R coefficients*/
-        for (Statistics sR : statisticsR) {
-            logger.debug(sR.toString());
-        }
+        logger.debug(statisticsR);
 
         GuessesGenerator guessesGeneratorR = new GuessesGenerator(statisticsR);
         guessesGeneratorR.setGuessOperator(guessOperator);
-        logger.debug("Total iterations : {}", guessesGeneratorR.getTotalIterations());
-        if (guessesGeneratorR.getTotalIterations().longValue() > 1000000 || guessesGeneratorR.getTotalIterations().longValue() < 0) {
+        BigInteger totalIterations = guessesGeneratorR.getTotalIterations();
+        logger.info("Total iterations : {}", totalIterations);
+        if (guessesGeneratorR.getTotalIterations().compareTo(BigInteger.valueOf(100000)) > 0 || totalIterations.compareTo(BigInteger.ZERO) <= 0) {
             logger.info("Too much iterations. Skipping.");
-            return new Guess();
+            //return new Guess();
+        } else {
+            ApproximatorNew.approximate(guessesGeneratorR, gvs);
         }
-
-        Guess approximateR = ApproximatorNew.approximate(guessesGeneratorR, examples, true, null, widthIn, heightIn);
+/*
+        Guess approximateR = ApproximatorNew.approximate(guessesGeneratorR, gvs);
         logger.debug("R : {}", approximateR);
-        return approximateR;
+        return approximateR;*/
     }
 
-    private Guess guessTheta(List<Pair<CartesianCoordinate, CartesianCoordinate>> examples, List<Operation> variableCombinationT, int widthIn, int heightIn, Guess rGuess, Guess.GuessOperator guessOperator) {
+    //todo tow seperate methods for guessR and guessT, since some times they are evaluated differently. (ie : Math.PI adjustment)
+    private void guessTheta(List<Pair<CartesianCoordinate, CartesianCoordinate>> examples,
+                            List<Operand> variableCombinationT, boolean constant,
+                            OperandDecorator guessOperator, GuessesValidationServiceNew gvs) {
         List<Statistics> statisticsT = new ArrayList<>();
-        for (Operation oT : variableCombinationT) {
+        for (Operand oT : variableCombinationT) {
             statisticsT.add(new Statistics(oT));
+        }
+        if (constant) {//todo move this to upper part
+            statisticsT.add(0, new Statistics(new ConstantOperand("constant")));
         }
         int window = 64;//(int) Math.sqrt(width * height);
         for (int i = 0; i < examples.size() - window; i += window) {
@@ -510,17 +439,71 @@ public class InductiveSynthesizerNew {
             }
         }
 
+        logger.debug(statisticsT);
+
         GuessesGenerator guessesGeneratorT = new GuessesGenerator(statisticsT);
         guessesGeneratorT.setGuessOperator(guessOperator);
-        logger.debug("Total iterations : {}", guessesGeneratorT.getTotalIterations());
-        if (guessesGeneratorT.getTotalIterations().longValue() > 1000000 || guessesGeneratorT.getTotalIterations().longValue() < 0) {
+        BigInteger totalIterations = guessesGeneratorT.getTotalIterations();
+        logger.debug("Total iterations : {}", totalIterations);
+        if (guessesGeneratorT.getTotalIterations().compareTo(BigInteger.valueOf(100000)) > 0 || totalIterations.compareTo(BigInteger.ZERO) <= 0) {
             logger.info("Too much iterations. Skipping.");
-            return new Guess();
+            //return new Guess();
+        } else {
+            ApproximatorNew.approximate(guessesGeneratorT, gvs);
+        }/*
+
+        Guess approximateT = ApproximatorNew.approximate(guessesGeneratorT, gvs);
+        logger.debug("T : {}", approximateT);
+        return approximateT;*/
+    }
+
+    private List<Pair<CartesianCoordinate, CartesianCoordinate>> getTestCases(
+            List<Pair<CartesianCoordinate, CartesianCoordinate>> pairs,
+            Integer size
+    ) {
+        List<Pair<CartesianCoordinate, CartesianCoordinate>> q1 = new ArrayList<>();
+        List<Pair<CartesianCoordinate, CartesianCoordinate>> q2 = new ArrayList<>();
+        List<Pair<CartesianCoordinate, CartesianCoordinate>> q3 = new ArrayList<>();
+        List<Pair<CartesianCoordinate, CartesianCoordinate>> q4 = new ArrayList<>();
+        for (Pair<CartesianCoordinate, CartesianCoordinate> p : pairs) {
+            CartesianCoordinate first = p.first;
+            if (first.getX() > 0 && first.getY() > 0) {
+                q1.add(p);
+            } else if (first.getX() > 0 && first.getY() < 0) {
+                q4.add(p);
+            } else if (first.getX() < 0 && first.getY() > 0) {
+                q2.add(p);
+            } else {
+                q3.add(p);
+            }
         }
 
-        Guess approximateT = ApproximatorNew.approximate(guessesGeneratorT, examples, false, rGuess, widthIn, heightIn);
-        logger.debug("T : {}", approximateT);
-        return approximateT;
+        Collections.shuffle(q1);
+        Collections.shuffle(q2);
+        Collections.shuffle(q3);
+        Collections.shuffle(q4);
+
+
+        int limit;
+        if (size == null) {
+            limit = (int) (Math.sqrt(pairs.size() * 2) / 4);
+        } else {
+            limit = size / 4;
+        }
+        List<Pair<CartesianCoordinate, CartesianCoordinate>> testCases = new ArrayList<>();
+        if (!q1.isEmpty())
+            testCases.addAll(q1.subList(0, Math.min(limit, q1.size() - 1)));
+
+        if (!q2.isEmpty())
+            testCases.addAll(q2.subList(0, Math.min(limit, q2.size() - 1)));
+
+        if (!q3.isEmpty())
+            testCases.addAll(q3.subList(0, Math.min(limit, q3.size() - 1)));
+
+        if (!q4.isEmpty())
+            testCases.addAll(q4.subList(0, Math.min(limit, q4.size() - 1)));
+
+        return testCases;
     }
 
     private int loopBound(double value) {
@@ -531,9 +514,6 @@ public class InductiveSynthesizerNew {
         return (double) Math.round(value * 1000d) / 1000d;
     }
 
-    private double round(double value, int zeros) {
-        double mul = Math.pow(10, zeros);
-        return (double) Math.round(value * mul) / mul;
-    }
+
 }
 

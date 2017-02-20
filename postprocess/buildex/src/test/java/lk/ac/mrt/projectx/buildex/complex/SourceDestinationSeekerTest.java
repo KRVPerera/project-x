@@ -7,18 +7,15 @@ import org.junit.Test;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.*;
-
 /**
- * Created by wik2kassa on 2/17/2017.
+ * @author Yasiru Kassapa
  */
-public class EluwaEngineTest {
+public class SourceDestinationSeekerTest {
     @Test
     public void fishEyeTest() throws Exception {
-        EluwaEngine eluwaEngine = new EluwaEngine();
+        SourceDestinationSeeker eluwaEngine = new SourceDestinationSeeker();
         BufferedImage sourceImage, filteredImage;
         sourceImage = ImageIO.read(new File("G:\\out.bmp"));
         filteredImage = ImageIO.read(new File("G:\\out_fisheye.bmp"));

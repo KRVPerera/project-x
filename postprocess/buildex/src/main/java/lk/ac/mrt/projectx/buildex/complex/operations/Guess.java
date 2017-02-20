@@ -9,17 +9,22 @@ import java.util.List;
  * @author Chathura Widanage
  */
 public class Guess {
-    private List<Pair<Operation, Double>> guesses = new ArrayList<>();
+    private List<Pair<Operand, Double>> guesses = new ArrayList<>();
+    private List<ParameterGuess> guessesParams = new ArrayList<>();
 
     private long votes;
 
-    private GuessOperator guessOperator;
+    private OperandDecorator guessOperator;
 
-    public GuessOperator getGuessOperator() {
+    public OperandDecorator getGuessOperator() {
         return guessOperator;
     }
 
-    public void setGuessOperator(GuessOperator guessOperator) {
+    public List<ParameterGuess> getGuessesParams() {
+        return guessesParams;
+    }
+
+    public void setGuessOperator(OperandDecorator guessOperator) {
         this.guessOperator = guessOperator;
     }
 
@@ -31,86 +36,50 @@ public class Guess {
         votes++;
     }
 
-    public void addGuess(Pair<Operation, Double> guess) {
+    public void addGuess(Pair<Operand, Double> guess) {
         guesses.add(guess);
     }
 
     public double getProcessedValue(double r, double theta) {
         double sum = 0;
-        for (Pair<Operation, Double> guess : guesses) {
+        for (Pair<Operand, Double> guess : guesses) {
             sum += (guess.first.operate(r, theta) * guess.second);
         }
         return sum;
     }
 
     public String getGeneratedCode() {
+        return getGeneratedCode(false);
+    }
+
+    public String getGeneratedCode(boolean withParams) {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < guesses.size(); i++) {
-            Pair<Operation, Double> p = guesses.get(i);
-            stringBuilder.append(p.second + "*" + p.first.getCode());
+            Pair<Operand, Double> p = guesses.get(i);
+            stringBuilder.append("(");
+
+            if (guessesParams.get(i) == null || !withParams) {
+                stringBuilder.append(p.second).append("f");
+            } else {
+                stringBuilder.append(guessesParams.get(i).generateCode());
+            }
+            stringBuilder.append("*")
+                    .append(p.first.getCode())
+                    .append(")");
             if (i != guesses.size() - 1) {
                 stringBuilder.append("+");
             }
         }
         if (this.guessOperator != null) {
-            return String.format(this.guessOperator.operation, stringBuilder.toString());
+            return String.format(this.guessOperator.getCode(), stringBuilder.toString());
         }
+        stringBuilder.append(";");
 
-        return stringBuilder.append(";").toString();
+        return stringBuilder.toString();
     }
 
-    public enum GuessOperator {//should do the inverse of each operator
-        NONE("%s"), TAN("Math.atan(%s)"), //ATAN("Math.tan(%s)"),
-        SQUARE("Math.sqrt(%s)");//,
-        /* SQRT("Math.pow(%s,2)"),
-         SIN("Math.asin(%s)"),
-         COS("Math.acos(%s)");*/
-        String operation;
-
-        GuessOperator(String operation) {
-            this.operation = operation;
-        }
-
-        public double operate(double val) {
-            if (this.equals(SQUARE)) {
-                return Math.pow(val, 2);
-            } else if (this.equals(TAN)) {
-                return Math.tan(val);
-            }/* else if (this.equals(ATAN)) {
-                return Math.atan(val);
-            }*//* else if (this.equals(SQRT)) {
-                return Math.sqrt(val);
-            } else if (this.equals(SIN)) {
-                return Math.sin(val);
-            } else if (this.equals(COS)) {
-                return Math.cos(val);
-            }*/ else {
-                return val;
-            }
-        }
-
-        public double operateInv(double val) {
-            if (this.equals(SQUARE)) {
-                return Math.sqrt(val);
-            } else if (this.equals(TAN)) {
-                return Math.atan(val);
-            }/*else if (this.equals(ATAN)) {
-                return Math.tan(val);
-            }*/ /*else if (this.equals(SQRT)) {
-                return Math.pow(val, 2);
-            } else if (this.equals(SIN)) {
-                return Math.asin(val);
-            } else if (this.equals(COS)) {
-                return Math.acos(val);
-            }*/ else {
-                return val;
-            }
-        }
-
-        @Override
-        public String toString() {
-            return this.operation;
-        }
+    public List<Pair<Operand, Double>> getGuesses() {
+        return guesses;
     }
 
     @Override

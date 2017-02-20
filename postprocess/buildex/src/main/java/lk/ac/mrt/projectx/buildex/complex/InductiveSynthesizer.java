@@ -2,11 +2,9 @@ package lk.ac.mrt.projectx.buildex.complex;
 
 import lk.ac.mrt.projectx.buildex.complex.cordinates.CartesianCoordinate;
 import lk.ac.mrt.projectx.buildex.complex.cordinates.PolarCoordinate;
-import lk.ac.mrt.projectx.buildex.complex.operations.Operation;
+import lk.ac.mrt.projectx.buildex.complex.operations.Operand;
 import lk.ac.mrt.projectx.buildex.models.Pair;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.math3.util.FastMath;
-import org.apache.commons.math3.util.MathUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -50,14 +48,14 @@ public class InductiveSynthesizer {
             }
         }
 
-        Operation rOnly = new Operation("R") {
+        Operand rOnly = new Operand("R") {
             @Override
             public double operate(double r, double theta) {
                 return r;
             }
         };
 
-        Operation tOnly = new Operation("T") {
+        Operand tOnly = new Operand("T") {
             @Override
             public double operate(double r, double theta) {
                 return theta;

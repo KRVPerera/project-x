@@ -13,14 +13,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Chathura Widanage
@@ -28,21 +23,27 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GuessesValidationServiceNew {
     private final static Logger logger = LogManager.getLogger(GuessesValidationServiceNew.class);
 
-    private Queue<Guess> guesses = new LinkedList<>();
-    private ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private Queue<Guess> guesses = new ConcurrentLinkedQueue<>();//LinkedList<>();
+    private int threads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+    private ExecutorService executorService;
     private List<Pair<CartesianCoordinate, CartesianCoordinate>> testCases;
-    private AtomicInteger executingCounter = new AtomicInteger(0);
     private AtomicLong itCount = new AtomicLong();
 
-    Semaphore semaphore = new Semaphore(1);
-    Lock lock = new ReentrantLock();
+    Semaphore maxVoteAccessSem = new Semaphore(1);
+    Semaphore taskSubmitSem = new Semaphore(10000);
+    //Lock lock = new ReentrantLock();
     private long maxVotes = 0;
     private List<Guess> maxVoters = new ArrayList<>();
+
+    private int submits = 0;
 
     private int width, height;
     private boolean isR;
 
     private Guess rGuess;
+
+    private Thread statusPrintThread;
+    private boolean running = true;
 
     public GuessesValidationServiceNew(List<Pair<CartesianCoordinate,
             CartesianCoordinate>> testCases, int width,
@@ -52,111 +53,181 @@ public class GuessesValidationServiceNew {
         this.height = height;
         this.isR = isR;
         this.rGuess = rGuess;
+
+        executorService = Executors.newFixedThreadPool(threads);
+
+        for (int i = 0; i < threads; i++) {
+            spawnNewThread();
+        }
+
+        statusPrintThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (running) {
+                    if (itCount.get() != 0)
+                        System.out.print("\r" + itCount.incrementAndGet());
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        statusPrintThread.start();
+
+    }
+
+    public void newBatch() {
+        this.itCount.set(0);
+    }
+
+    public int getTestsSize() {
+        return testCases.size();
+    }
+
+    public List<Guess> getMaxVoters() {
+        try {//prevent concurrent exception while logging
+            maxVoteAccessSem.acquire();
+            List<Guess> mv = new ArrayList<>(maxVoters);
+            return mv;
+        } catch (InterruptedException e) {
+            return null;
+        } finally {
+            maxVoteAccessSem.release();
+        }
     }
 
     public void submit(Guess guess) throws InterruptedException {
-        lock.lock();
+        if (guess == null) {
+            return;
+        }
+        //lock.lock();
+        taskSubmitSem.acquire();//control memory usage by trying to keep queue size at a constant
         guesses.add(guess);
-        checkAndExecute();
+      /*  if (guesses.size() < 5000) {
+            guesses.add(guess);
+        } else {
+
+        }*/
     }
 
     public List<Guess> awaitTermination() throws InterruptedException {
-        while (!guesses.isEmpty()) {
-
+        int spawned = -1;
+        while (guesses.peek() != null) {
+            if (spawned++ < 4) {
+                spawnNewThread();
+            } else {
+                break;
+            }
+            Thread.sleep(10000);//allow 10secs before recheck
         }
+        running = false;
         executorService.shutdown();
         executorService.awaitTermination(1, TimeUnit.DAYS);
         return maxVoters;
     }
 
+    /**
+     * This methods limits memory usage by limiting number of submitted runnables
+     */
     private void checkAndExecute() {
-        if (guesses.size() < 100) {
-            lock.unlock();
-        }
-        Guess poll = guesses.poll();
-        if (poll != null) {
-            submitNewTask(poll);
-        }
+        /*try {
+            taskSubmitSem.acquire();
+            spawnNewThread();
+        } catch (InterruptedException e) {
+            spawnNewThread();
+        } finally {
+            taskSubmitSem.release();
+        }*/
     }
 
-    private void submitNewTask(final Guess guess) {
+    private void spawnNewThread() {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                executingCounter.incrementAndGet();
-                System.out.print("\r" + itCount.incrementAndGet());
-                for (int p = 0; p < testCases.size(); p++) {
-                    Pair<CartesianCoordinate, CartesianCoordinate> pair = testCases.get(p);
-                    CartesianCoordinate cartesianCoordinateFirst = pair.first;
-                    CartesianCoordinate cartesianCoordinateSecond = pair.second;
-
-                    PolarCoordinate polarCoordinateFirst = CoordinateTransformer.cartesian2Polar(cartesianCoordinateFirst);
-                    PolarCoordinate polarCoordinateSecond = CoordinateTransformer.cartesian2Polar(cartesianCoordinateSecond);
-
-
-                    double newValue = guess.getProcessedValue(polarCoordinateFirst.getR(), polarCoordinateFirst.getTheta());
-                    if (guess.getGuessOperator() != null) {
-                        newValue = guess.getGuessOperator().operateInv(newValue);
-                    }
-                    PolarCoordinate newPolar;
-                    if (isR) {
-                        newPolar = new PolarCoordinate(polarCoordinateFirst.getTheta(), newValue);
-                    } else {
-                        double rVal = rGuess.getProcessedValue(polarCoordinateFirst.getR(), polarCoordinateFirst.getTheta());
-                        if (rGuess.getGuessOperator() != null) {
-                            rVal = rGuess.getGuessOperator().operateInv(rVal);
-                        }
-
-                        newValue = MathUtils.normalizeAngle(newValue, FastMath.PI);
-                        //System.out.println(newValue);
-                        //System.out.println(polarCoordinateSecond.getR()+","+rVal);
-                        newPolar = new PolarCoordinate(newValue, rVal);
-                    }
-
-
-                    double distance = 5;
-                    if (isR) {
-                        distance = Math.abs(polarCoordinateSecond.getR() - newPolar.getR());
-                    } else {
-                        CartesianCoordinate genertaed = CoordinateTransformer.polar2Cartesian(newPolar);
-                        double x = pair.second.getX();
-                        double y = pair.second.getY();
-                        distance = Math.sqrt(
-                                Math.pow(genertaed.getX() - x, 2)
-                                        + Math.pow(genertaed.getY() - y, 2)
-                        );// / newPolar.getTheta();
-                        //System.out.println(x+","+genertaed.getX());
-                        //System.out.println(distance);
-                    }
-                    if (isR && distance <= Math.sqrt(2) * 3) {
-                        guess.incrementVote();
-                    } else if (!isR && distance <= 15) {
-                        guess.incrementVote();
-                    }
-
-                    //stop if not going to make it better than the current best
-                    if ((testCases.size() - maxVotes) < (p - guess.getVotes())) {//no point of continuing
-                        //logger.debug("Abandoning guess due to no possible winning : {}", guess);
+                while (running) {
+                    Guess guess = guesses.poll();
+                    if (guess == null) {
+                        taskSubmitSem.release();
                         continue;
                     }
+                    boolean skipped = false;
+                    for (int p = 0; p < testCases.size(); p++) {
+                        Pair<CartesianCoordinate, CartesianCoordinate> pair = testCases.get(p);
+                        CartesianCoordinate cartesianCoordinateFirst = pair.first;
+                        CartesianCoordinate cartesianCoordinateSecond = pair.second;
 
-                }
-                try {
-                    semaphore.acquire();
-                    if (maxVotes < guess.getVotes()) {
-                        maxVotes = guess.getVotes();
-                        maxVoters.clear();
-                        maxVoters.add(guess);
-                    } else if (maxVotes == guess.getVotes()) {
-                        maxVoters.add(guess);
+                        PolarCoordinate polarCoordinateFirst = CoordinateTransformer.cartesian2Polar(cartesianCoordinateFirst);
+                        PolarCoordinate polarCoordinateSecond = CoordinateTransformer.cartesian2Polar(cartesianCoordinateSecond);
+
+
+                        double newValue = guess.getProcessedValue(polarCoordinateFirst.getR(), polarCoordinateFirst.getTheta());
+                        if (guess.getGuessOperator() != null) {
+                            newValue = guess.getGuessOperator().operateInv(newValue);
+                        }
+                        PolarCoordinate newPolar;
+                        if (isR) {
+                            newPolar = new PolarCoordinate(polarCoordinateFirst.getTheta(), newValue);
+                        } else {
+                            double rVal = rGuess.getProcessedValue(polarCoordinateFirst.getR(), polarCoordinateFirst.getTheta());
+                            if (rGuess.getGuessOperator() != null) {
+                                rVal = rGuess.getGuessOperator().operateInv(rVal);
+                            }
+
+                            newValue = MathUtils.normalizeAngle(newValue, FastMath.PI);
+                            //System.out.println(newValue);
+                            //System.out.println(polarCoordinateSecond.getR()+","+rVal);
+                            newPolar = new PolarCoordinate(newValue, rVal);
+                        }
+
+
+                        double distance = 500;
+                        if (isR) {
+                            distance = Math.abs(polarCoordinateSecond.getR() - newPolar.getR());
+                        } else {
+                            CartesianCoordinate genertaed = CoordinateTransformer.polar2Cartesian(newPolar);
+                            double x = pair.second.getX();
+                            double y = pair.second.getY();
+                            distance = Math.sqrt(
+                                    Math.pow(genertaed.getX() - x, 2)
+                                            + Math.pow(genertaed.getY() - y, 2)
+                            );// / newPolar.getTheta();
+                            //System.out.println(x+","+genertaed.getX());
+                            //System.out.println(distance);
+                        }
+                        if (isR && distance <= Math.sqrt(2)) {
+                            guess.incrementVote();
+                        } else if (!isR && distance <= 15) {
+                            guess.incrementVote();
+                        }
+
+                        //stop if not going to make it better than the current best
+                        if ((testCases.size() - maxVotes) < (p - guess.getVotes())) {//no point of continuing
+                            //logger.debug("Abandoning guess due to no possible winning : {}", guess);
+                            skipped = true;
+                            continue;
+                        }
                     }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } finally {
-                    semaphore.release();
+                    if (!skipped) {
+                        try {
+                            maxVoteAccessSem.acquire();
+                            if (maxVotes < guess.getVotes()) {
+                                maxVotes = guess.getVotes();
+                                maxVoters.clear();
+                                maxVoters.add(guess);
+                            } else if (maxVotes == guess.getVotes()) {
+                                maxVoters.add(guess);
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } finally {
+                            maxVoteAccessSem.release();
+                        }
+                    }
+                    itCount.incrementAndGet();
+                    taskSubmitSem.release();
                 }
-                executingCounter.decrementAndGet();
-                checkAndExecute();
             }
         });
     }

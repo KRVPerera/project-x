@@ -26,7 +26,7 @@ public class ComplexSynthesizer {
         double[] residuals = regression.estimateResiduals();
         DescriptiveStatistics ds = new DescriptiveStatistics(residuals);
         //System.out.println(ds.getMin() + " : " + ds.getMax());
-        if (isR && ds.getMax() < 5 && ds.getMin() > -5) {
+        if (isR && ds.getMax() < 64 && ds.getMin() > -64) {
             //System.out.println(regression.calculateRSquared());
             return doubles;
         } else if (!isR && ds.getMax() < 0.1 && ds.getMin() > -0.1) {

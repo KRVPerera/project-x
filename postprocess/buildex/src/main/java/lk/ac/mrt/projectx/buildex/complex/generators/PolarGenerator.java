@@ -20,7 +20,7 @@ public class PolarGenerator extends Generator {
                 CartesianCoordinate cartesianCoordinate = new CartesianCoordinate(i, j);
                 PolarCoordinate polarCoordinate = CoordinateTransformer.cartesian2Polar(width, height, cartesianCoordinate);
 
-                CartesianCoordinate newCartCord = new CartesianCoordinate(polarCoordinate.getTheta() * width / (Math.PI * 4), polarCoordinate.getR() * height / maxR);
+                CartesianCoordinate newCartCord = new CartesianCoordinate((int)(polarCoordinate.getTheta() * width / (Math.PI * 4)), (int)(polarCoordinate.getR() * height / maxR));
                 CoordinateTransformer.cartesianToCorner(width, height, newCartCord);
                 if (clampPass(width, height, newCartCord)) {
                     examples.add(new Pair<>(

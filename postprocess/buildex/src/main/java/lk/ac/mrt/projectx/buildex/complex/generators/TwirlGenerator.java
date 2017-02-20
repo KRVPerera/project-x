@@ -9,11 +9,11 @@ import java.util.List;
 /**
  * @author Chathura Widanage
  */
-public class TwirlGenerator extends Generator{
+public class TwirlGenerator extends Generator {
     public List<Pair<CartesianCoordinate, CartesianCoordinate>> generate(int width, int height) {
         List<Pair<CartesianCoordinate, CartesianCoordinate>> examples = new ArrayList<>();
-        double x0 = 0.5 * (width - 1);
-        double y0 = 0.5 * (height - 1);
+        double x0 = 0.5 * (width);
+        double y0 = 0.5 * (height);
         for (int sx = 0; sx < width; sx++) {
             for (int sy = 0; sy < height; sy++) {
                 double dx = sx - x0;

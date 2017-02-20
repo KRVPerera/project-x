@@ -1,6 +1,9 @@
 package lk.ac.mrt.projectx.buildex.complex.generators;
 
 import lk.ac.mrt.projectx.buildex.complex.cordinates.CartesianCoordinate;
+import lk.ac.mrt.projectx.buildex.models.Pair;
+
+import java.util.List;
 
 /**
  * @author Chathura Widanage
@@ -13,4 +16,6 @@ public abstract class Generator {
 
         return x >= 0 && x <= width - 1 && y >= 0 && y <= height - 1;
     }
+
+    public abstract List<Pair<CartesianCoordinate, CartesianCoordinate>> generate(int width, int height);
 }

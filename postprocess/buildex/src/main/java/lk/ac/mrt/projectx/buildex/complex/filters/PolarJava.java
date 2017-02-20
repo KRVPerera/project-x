@@ -5,6 +5,8 @@ import lk.ac.mrt.projectx.buildex.complex.cordinates.CartesianCoordinate;
 import lk.ac.mrt.projectx.buildex.complex.cordinates.PolarCoordinate;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.util.MathUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.awt.image.BufferedImage;
 
@@ -12,6 +14,7 @@ import java.awt.image.BufferedImage;
  * @author Chathura Widanage
  */
 public class PolarJava {
+    private static final Logger logger= LogManager.getLogger(PolarJava.class);
     public void filter(BufferedImage in, BufferedImage out) {
         int width = in.getWidth();
         int height = in.getHeight();
@@ -47,8 +50,9 @@ public class PolarJava {
 
                 CartesianCoordinate newCartCord = new CartesianCoordinate(polarCoordinate.getTheta() * width / (Math.PI * 4), polarCoordinate.getR() * height / maxR);
                 CoordinateTransformer.cartesianToCorner(width, height, newCartCord);
-                if (clampPass(width, height, newCartCord))
+                if (clampPass(width, height, newCartCord)) {
                     out.setRGB(i, j, in.getRGB((int) newCartCord.getX(), (int) newCartCord.getY()));
+                }
             }
         }
     }

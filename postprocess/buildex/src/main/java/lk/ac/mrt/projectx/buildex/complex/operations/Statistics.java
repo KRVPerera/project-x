@@ -7,7 +7,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
  */
 public class Statistics {
     private DescriptiveStatistics statistics = new DescriptiveStatistics();
-    private Operation operation;
+    private Operand operand;
 
     private boolean changed = true;
 
@@ -42,12 +42,12 @@ public class Statistics {
         this.changed = changed;
     }
 
-    public Statistics(Operation operation) {
-        this.operation = operation;
+    public Statistics(Operand operand) {
+        this.operand = operand;
     }
 
-    public Operation getOperation() {
-        return operation;
+    public Operand getOperand() {
+        return operand;
     }
 
     public void addValue(double val) {
@@ -57,6 +57,6 @@ public class Statistics {
 
     @Override
     public String toString() {
-        return String.format("Operation : %s [%d - %d] : %d", operation.getName(), this.getLow(), this.getHigh(), this.getTotalIterations());
+        return String.format("Operation : %s [%d - %d] : %d", operand.getName(), this.getLow(), this.getHigh(), this.getTotalIterations());
     }
 }
