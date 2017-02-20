@@ -112,7 +112,7 @@ public class FormalVerifier extends ApplicationFrame {
         setContentPane(panel);
         //TODO : Print
 
-        //ChartUtilities.saveChartAsJPEG( new File("F:\\FYP2\\FinalP\\graphs\\FishEye"+System.currentTimeMillis()+".jpg"),chart,800,600 );
+        ChartUtilities.saveChartAsJPEG( new File("F:\\FYP2\\FinalP\\graphs\\Twirl"+System.currentTimeMillis()+".jpg"),chart,800,600 );
 
     }
 
@@ -135,7 +135,7 @@ public class FormalVerifier extends ApplicationFrame {
     public static void main(final String[] args) throws IOException {
 
         //TODO : Add labels
-        final FormalVerifier demo = new FormalVerifier("Polar Generator", "Old X", "New X");
+        final FormalVerifier demo = new FormalVerifier("Twirl Filter", "Old R*0.05 + Old Theta", "New Theta");
         demo.pack();
         RefineryUtilities.centerFrameOnScreen(demo);
         demo.setVisible(true);
@@ -162,8 +162,8 @@ public class FormalVerifier extends ApplicationFrame {
             if (clampPass(width, height, outputCoord)) {
                 //  out.setRGB(i, j, in.getRGB((int) newCartCord.getX(), (int) newCartCord.getY()));
                 //TODO : Add data 0 - X axis , 1 - Y Axis
-                this.data[0][i] = (float) polarOldCoord.getR();
-                this.data[1][i] = (float) polaroOutputCoord.getR();
+                this.data[0][i] = (float) polarOldCoord.getR()*0.05f+(float) polarOldCoord.getTheta();
+                this.data[1][i] = (float) polaroOutputCoord.getTheta();
             }
             i++;
         }
