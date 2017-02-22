@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.List;
 
 /**
  * @author Chathura Widanage
@@ -33,7 +34,8 @@ public class TestSolver {
 
         ExamplesFile examplesFile = new ExamplesFile();
 
-        java.util.List<Pair<CartesianCoordinate, CartesianCoordinate>> examples = examplesFile.read("examples_1487619135265.csv");
+        List<Pair<CartesianCoordinate, CartesianCoordinate>>
+                examples = examplesFile.read("C:\\Users\\chath\\Desktop\\ExampleGenerotor\\examples\\examples_1487701047010.csv");
 
 
 //        inductiveSynthesizer.solve(new TwirlGenerator().generate(x, x), inImg, outImg);

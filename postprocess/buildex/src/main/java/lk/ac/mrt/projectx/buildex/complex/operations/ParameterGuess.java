@@ -1,24 +1,23 @@
 package lk.ac.mrt.projectx.buildex.complex.operations;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
  * @author Chathura Widanage
  */
 public class ParameterGuess implements Comparable<ParameterGuess> {
-    private List<Attribute> numberator;
+    private List<Attribute> numerator;
     private List<Attribute> denominator;
     private OperandDecorator decorator;
     private Double error;
 
     public List<Attribute> getNumerator() {
-        return numberator;
+        return numerator;
     }
 
-    public void setNumberator(List<Attribute> numberator) {
-        this.numberator = numberator;
+    public void setNumerator(List<Attribute> numerator) {
+        this.numerator = numerator;
     }
 
     public List<Attribute> getDenominator() {
@@ -46,12 +45,12 @@ public class ParameterGuess implements Comparable<ParameterGuess> {
     }
 
     public String generateCode() {
-        Collections.sort(numberator);//to make all attributes in numerator and denominator in same order
+        Collections.sort(numerator);//to make all attributes in numerator and denominator in same order
         Collections.sort(denominator);
-        if (numberator.equals(denominator)) {
+        if (numerator.equals(denominator)) {
             return "(1)";
         }
-        return "(" + String.format(decorator.toString(), (codeGenParams(numberator) + "/" + codeGenParams(denominator))) + ")";
+        return "(" + String.format(decorator.toString(), (codeGenParams(numerator) + "/" + codeGenParams(denominator))) + ")";
     }
 
     private String codeGenParams(List<Attribute> atts) {
@@ -68,7 +67,7 @@ public class ParameterGuess implements Comparable<ParameterGuess> {
     @Override
     public int compareTo(ParameterGuess o) {
         if (this.error.compareTo(o.error) == 0) {
-            return -(o.numberator.size() + o.denominator.size()) + (this.numberator.size() + this.denominator.size());
+            return -(o.numerator.size() + o.denominator.size()) + (this.numerator.size() + this.denominator.size());
         }
         return this.error.compareTo(o.error);
     }
@@ -76,7 +75,7 @@ public class ParameterGuess implements Comparable<ParameterGuess> {
     @Override
     public String toString() {
         return "ParameterGuess{" +
-                "numberator=" + numberator +
+                "numerator=" + numerator +
                 ", denominator=" + denominator +
                 ", decorator=" + decorator +
                 ", error=" + error +
@@ -93,7 +92,7 @@ public class ParameterGuess implements Comparable<ParameterGuess> {
     public class ParameterGuessAttributeNumberComparator implements Comparator<ParameterGuess> {
         @Override
         public int compare(ParameterGuess o1, ParameterGuess o2) {
-            return (o2.numberator.size() + o2.denominator.size()) - (o1.numberator.size() + o1.denominator.size());
+            return (o2.numerator.size() + o2.denominator.size()) - (o1.numerator.size() + o1.denominator.size());
         }
     }*/
 }

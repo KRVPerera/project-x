@@ -22,7 +22,7 @@ public class ExamplesFile {
 
         List<Pair<CartesianCoordinate, CartesianCoordinate>> examples = new ArrayList<>();
 
-        Scanner input = new Scanner(new File("examples",fileName));
+        Scanner input = new Scanner(new File(fileName));
 
         input.nextLine();
 

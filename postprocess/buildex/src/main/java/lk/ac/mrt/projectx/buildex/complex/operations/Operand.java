@@ -6,6 +6,7 @@ package lk.ac.mrt.projectx.buildex.complex.operations;
 public abstract class Operand {
     private String name;
     private String code;
+    private Integer family;
 
     public String getName() {
         return name;
@@ -22,6 +23,19 @@ public abstract class Operand {
     public Operand(String name, String code) {
         this.name = name;
         this.code = code;
+    }
+
+    public Operand(String name, String code, Integer family) {
+        this.name = name;
+        this.code = code;
+        this.family = family;
+    }
+
+    public Integer getFamily() {
+        if (family == null) {
+            return -1;
+        }
+        return family;
     }
 
     public String getCode() {
